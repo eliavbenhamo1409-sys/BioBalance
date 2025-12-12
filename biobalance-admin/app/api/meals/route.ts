@@ -3,18 +3,37 @@ import { supabaseAdmin } from '@/lib/supabaseAdminClient';
 
 export async function GET() {
   try {
-    const { data: meals, error } = await supabaseAdmin
+    // Get meals
+    const { data: meals, error: mealsError } = await supabaseAdmin
       .from('meals')
-      .select('*, user_profiles(email, full_name)')
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (error) {
-      console.error('Supabase error:', error);
+    if (mealsError) {
+      console.error('Supabase error:', mealsError);
       return NextResponse.json({ meals: [] }, { status: 500 });
     }
 
-    return NextResponse.json({ meals: meals || [] });
+    // Get unique user IDs
+    const userIds = [...new Set(meals?.map(m => m.user_id).filter(Boolean))];
+    
+    // Get user profiles
+    const { data: users } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, email, full_name')
+      .in('id', userIds);
+
+    // Create user map
+    const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+    // Add user info to meals
+    const mealsWithUsers = meals?.map(meal => ({
+      ...meal,
+      user_profiles: userMap.get(meal.user_id),
+    })) || [];
+
+    return NextResponse.json({ meals: mealsWithUsers });
   } catch (error) {
     console.error('Error fetching meals:', error);
     return NextResponse.json({ meals: [] }, { status: 500 });

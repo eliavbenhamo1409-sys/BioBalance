@@ -8,9 +8,43 @@ export async function GET() {
     // Get today's stats
     const { data: todayStats } = await supabaseAdmin
       .from('daily_stats')
-      .select('*, user_profiles(email, full_name)')
+      .select('*')
       .eq('date', today)
       .order('calories', { ascending: false });
+
+    // Get recent stats (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { data: recentStats } = await supabaseAdmin
+      .from('daily_stats')
+      .select('*')
+      .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+      .order('date', { ascending: false })
+      .limit(100);
+
+    // Get unique user IDs from both datasets
+    const allStats = [...(todayStats || []), ...(recentStats || [])];
+    const userIds = [...new Set(allStats.map(s => s.user_id).filter(Boolean))];
+    
+    // Get user profiles
+    const { data: users } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id, email, full_name')
+      .in('id', userIds);
+
+    // Create user map
+    const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+    // Add user info to stats
+    const todayStatsWithUsers = todayStats?.map(stat => ({
+      ...stat,
+      user_profiles: userMap.get(stat.user_id),
+    })) || [];
+
+    const recentStatsWithUsers = recentStats?.map(stat => ({
+      ...stat,
+      user_profiles: userMap.get(stat.user_id),
+    })) || [];
 
     // Calculate averages for today
     const avgCalories = todayStats?.length
@@ -25,19 +59,9 @@ export async function GET() {
       ? Math.round(todayStats.reduce((sum, s) => sum + (s.water || 0), 0) / todayStats.length)
       : 0;
 
-    // Get recent stats (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const { data: recentStats } = await supabaseAdmin
-      .from('daily_stats')
-      .select('*, user_profiles(email, full_name)')
-      .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-      .order('date', { ascending: false })
-      .limit(100);
-
     return NextResponse.json({
-      todayStats: todayStats || [],
-      recentStats: recentStats || [],
+      todayStats: todayStatsWithUsers,
+      recentStats: recentStatsWithUsers,
       avgCalories,
       avgProtein,
       avgWater,
