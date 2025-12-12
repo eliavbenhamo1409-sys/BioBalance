@@ -1,67 +1,69 @@
+'use client';
+
 import { TopBar } from '@/components/TopBar';
 import { StatsCard } from '@/components/StatsCard';
 import { DataTable } from '@/components/DataTable';
-import { supabaseAdmin } from '@/lib/supabaseAdminClient';
 import { Flame, Beef, Droplet, Calendar } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export const dynamic = 'force-dynamic';
-
-async function getUserData(userId: string) {
-  const { data: user } = await supabaseAdmin
-    .from('user_profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (!user) return null;
-
-  // Get user's daily stats
-  const { data: stats } = await supabaseAdmin
-    .from('daily_stats')
-    .select('*')
-    .eq('user_id', userId)
-    .order('date', { ascending: false })
-    .limit(30);
-
-  // Get user's meals
-  const { data: meals } = await supabaseAdmin
-    .from('meals')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  // Calculate averages
-  const avgCalories = stats?.length
-    ? Math.round(stats.reduce((sum, s) => sum + (s.calories || 0), 0) / stats.length)
-    : 0;
-
-  const avgProtein = stats?.length
-    ? Math.round(stats.reduce((sum, s) => sum + (s.protein || 0), 0) / stats.length)
-    : 0;
-
-  const avgWater = stats?.length
-    ? Math.round(stats.reduce((sum, s) => sum + (s.water || 0), 0) / stats.length)
-    : 0;
-
-  return { user, stats: stats || [], meals: meals || [], avgCalories, avgProtein, avgWater };
+interface UserData {
+  user: any;
+  stats: any[];
+  meals: any[];
+  avgCalories: number;
+  avgProtein: number;
+  avgWater: number;
 }
 
-export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const data = await getUserData(id);
+export default function UserDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [data, setData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!data) {
-    notFound();
-  }
+  useEffect(() => {
+    if (id) {
+      fetchUserData();
+    }
+  }, [id]);
 
-  const { user, stats, meals, avgCalories, avgProtein, avgWater } = data;
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`/api/users/${id}`);
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('he-IL');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopBar title="משתמש" description="טוען..." />
+        <div className="p-8 text-center">טוען נתונים...</div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopBar title="שגיאה" description="משתמש לא נמצא" />
+        <div className="p-8 text-center text-red-600">משתמש לא נמצא</div>
+      </div>
+    );
+  }
+
+  const { user, stats, meals, avgCalories, avgProtein, avgWater } = data;
 
   return (
     <div className="min-h-screen bg-gray-50">

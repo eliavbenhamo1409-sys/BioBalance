@@ -1,56 +1,46 @@
+'use client';
+
 import { TopBar } from '@/components/TopBar';
 import { StatsCard } from '@/components/StatsCard';
 import { DataTable } from '@/components/DataTable';
-import { supabaseAdmin } from '@/lib/supabaseAdminClient';
 import { Flame, Beef, Droplet, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export const dynamic = 'force-dynamic';
-
-async function getStatsData() {
-  const today = new Date().toISOString().split('T')[0];
-
-  // Get today's stats
-  const { data: todayStats } = await supabaseAdmin
-    .from('daily_stats')
-    .select('*, user_profiles(email, full_name)')
-    .eq('date', today)
-    .order('calories', { ascending: false });
-
-  // Calculate averages for today
-  const avgCalories = todayStats?.length
-    ? Math.round(todayStats.reduce((sum, s) => sum + (s.calories || 0), 0) / todayStats.length)
-    : 0;
-
-  const avgProtein = todayStats?.length
-    ? Math.round(todayStats.reduce((sum, s) => sum + (s.protein || 0), 0) / todayStats.length)
-    : 0;
-
-  const avgWater = todayStats?.length
-    ? Math.round(todayStats.reduce((sum, s) => sum + (s.water || 0), 0) / todayStats.length)
-    : 0;
-
-  // Get recent stats (last 30 days)
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const { data: recentStats } = await supabaseAdmin
-    .from('daily_stats')
-    .select('*, user_profiles(email, full_name)')
-    .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-    .order('date', { ascending: false })
-    .limit(100);
-
-  return {
-    todayStats: todayStats || [],
-    recentStats: recentStats || [],
-    avgCalories,
-    avgProtein,
-    avgWater,
-    activeToday: todayStats?.length || 0,
-  };
+interface StatsData {
+  todayStats: any[];
+  recentStats: any[];
+  avgCalories: number;
+  avgProtein: number;
+  avgWater: number;
+  activeToday: number;
 }
 
-export default async function StatsPage() {
-  const { todayStats, recentStats, avgCalories, avgProtein, avgWater, activeToday } = await getStatsData();
+export default function StatsPage() {
+  const [data, setData] = useState<StatsData>({
+    todayStats: [],
+    recentStats: [],
+    avgCalories: 0,
+    avgProtein: 0,
+    avgWater: 0,
+    activeToday: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/stats');
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('he-IL');
@@ -59,6 +49,15 @@ export default async function StatsPage() {
   const getUserName = (stat: any) => {
     return stat.user_profiles?.full_name || stat.user_profiles?.email || 'לא ידוע';
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopBar title="סטטיסטיקה יומית" description="טוען..." />
+        <div className="p-8 text-center">טוען נתונים...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,25 +71,25 @@ export default async function StatsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatsCard
             title="ממוצע קלוריות היום"
-            value={avgCalories}
+            value={data.avgCalories}
             icon={Flame}
             description="קלוריות ממוצעות"
           />
           <StatsCard
             title="ממוצע חלבון היום"
-            value={`${avgProtein}g`}
+            value={`${data.avgProtein}g`}
             icon={Beef}
             description="חלבון ממוצע"
           />
           <StatsCard
             title="ממוצע מים היום"
-            value={avgWater}
+            value={data.avgWater}
             icon={Droplet}
             description="כוסות מים ממוצעות"
           />
           <StatsCard
             title="משתמשים פעילים היום"
-            value={activeToday}
+            value={data.activeToday}
             icon={TrendingUp}
             description="דיווחו היום"
           />
@@ -124,7 +123,7 @@ export default async function StatsPage() {
               },
               { key: 'water', header: 'כוסות מים' },
             ]}
-            data={todayStats}
+            data={data.todayStats}
             emptyMessage="אין נתונים להיום"
           />
         </div>
@@ -162,7 +161,7 @@ export default async function StatsPage() {
               },
               { key: 'water', header: 'כוסות מים' },
             ]}
-            data={recentStats}
+            data={data.recentStats}
             emptyMessage="אין נתונים"
           />
         </div>

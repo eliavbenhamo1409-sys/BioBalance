@@ -1,21 +1,28 @@
+'use client';
+
 import { TopBar } from '@/components/TopBar';
 import { DataTable } from '@/components/DataTable';
-import { supabaseAdmin } from '@/lib/supabaseAdminClient';
+import { useEffect, useState } from 'react';
 
-export const dynamic = 'force-dynamic';
+export default function MealsPage() {
+  const [meals, setMeals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-async function getMealsData() {
-  const { data: meals } = await supabaseAdmin
-    .from('meals')
-    .select('*, user_profiles(email, full_name)')
-    .order('created_at', { ascending: false })
-    .limit(100);
+  useEffect(() => {
+    fetchMeals();
+  }, []);
 
-  return meals || [];
-}
-
-export default async function MealsPage() {
-  const meals = await getMealsData();
+  const fetchMeals = async () => {
+    try {
+      const response = await fetch('/api/meals');
+      const data = await response.json();
+      setMeals(data.meals || []);
+    } catch (error) {
+      console.error('Error fetching meals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('he-IL', {
@@ -30,6 +37,15 @@ export default async function MealsPage() {
   const getUserName = (meal: any) => {
     return meal.user_profiles?.full_name || meal.user_profiles?.email || 'לא ידוע';
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopBar title="ארוחות" description="טוען..." />
+        <div className="p-8 text-center">טוען נתונים...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
