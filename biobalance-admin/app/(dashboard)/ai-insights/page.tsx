@@ -58,18 +58,18 @@ export default function AIInsightsPage() {
 
       <div className="p-8">
         {/* Info Card */}
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200 mb-8">
+        <div className="bg-slate-900 rounded-xl p-6 border border-slate-700 mb-8">
           <div className="flex items-start gap-4">
-            <div className="bg-purple-100 p-3 rounded-xl">
-              <Sparkles className="w-6 h-6 text-purple-600" />
+            <div className="bg-emerald-600 p-3 rounded-lg">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                איך זה עובד?
+              <h3 className="text-lg font-bold text-white mb-2">
+                ניתוח מתקדם מבוסס AI
               </h3>
-              <p className="text-gray-700">
-                המערכת משתמשת בבינה מלאכותית כדי לנתח את נתוני המשתמשים ולספק תובנות
-                מעמיקות על שימוש באפליקציה, הרגלי תזונה, ודרכים לשיפור חווית המשתמש.
+              <p className="text-slate-300 font-medium">
+                המערכת משתמשת במודל O1 של OpenAI לניתוח עמוק של נתוני המשתמשים,
+                זיהוי מגמות והמלצות אסטרטגיות לשיפור המוצר והעסק.
               </p>
             </div>
           </div>
@@ -114,18 +114,18 @@ export default function AIInsightsPage() {
           <button
             onClick={handleAnalyze}
             disabled={loading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-slate-900 text-white py-3.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-slate-700"
           >
             <Sparkles className="w-5 h-5" />
-            {loading ? 'מנתח נתונים...' : 'נתח נתונים והצג תובנות'}
+            {loading ? 'מנתח נתונים...' : 'הפעל ניתוח AI'}
           </button>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-8 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5" />
-            <span>{error}</span>
+          <div className="bg-red-50 border-r-4 border-red-600 text-red-800 px-6 py-4 rounded-lg mb-8 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="font-semibold">{error}</span>
           </div>
         )}
 
@@ -133,49 +133,49 @@ export default function AIInsightsPage() {
         {results && (
           <div className="space-y-6">
             {/* Summary */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">סיכום</h3>
-              <p className="text-gray-700 leading-relaxed">{results.summary}</p>
+            <div className="bg-white rounded-xl p-6 border-l-4 border-emerald-600 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-4 uppercase tracking-wide">סיכום מנהלים</h3>
+              <p className="text-slate-700 leading-relaxed font-medium">{results.summary}</p>
             </div>
 
             {/* Insights */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 uppercase tracking-wide">
                 <TrendingUp className="w-6 h-6 text-emerald-600" />
-                תובנות מרכזיות
+                תובנות אסטרטגיות
               </h3>
               <div className="space-y-4">
                 {results.insights.map((insight, index) => (
                   <div
                     key={index}
-                    className={`p-4 rounded-xl border-r-4 ${
+                    className={`p-5 rounded-lg border-r-4 ${
                       insight.type === 'positive'
-                        ? 'bg-green-50 border-green-500'
+                        ? 'bg-green-50 border-green-600'
                         : insight.type === 'warning'
-                        ? 'bg-yellow-50 border-yellow-500'
-                        : 'bg-blue-50 border-blue-500'
+                        ? 'bg-amber-50 border-amber-600'
+                        : 'bg-blue-50 border-blue-600'
                     }`}
                   >
-                    <h4 className="font-bold text-gray-900 mb-2">{insight.title}</h4>
-                    <p className="text-gray-700">{insight.description}</p>
+                    <h4 className="font-bold text-slate-900 mb-2 text-lg">{insight.title}</h4>
+                    <p className="text-slate-700 font-medium leading-relaxed">{insight.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Suggestions */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-6 h-6 text-purple-600" />
-                המלצות לייעול
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 uppercase tracking-wide">
+                <Users className="w-6 h-6 text-slate-700" />
+                תוכנית פעולה
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {results.suggestions.map((suggestion, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  <li key={index} className="flex items-start gap-4 p-4 hover:bg-slate-50 rounded-lg transition-colors">
+                    <span className="flex-shrink-0 w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-bold">
                       {index + 1}
                     </span>
-                    <span className="text-gray-700 flex-1">{suggestion}</span>
+                    <span className="text-slate-700 flex-1 font-medium leading-relaxed">{suggestion}</span>
                   </li>
                 ))}
               </ul>
@@ -185,15 +185,15 @@ export default function AIInsightsPage() {
 
         {/* Empty State */}
         {!results && !loading && !error && (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-              <Sparkles className="w-8 h-8 text-purple-600" />
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-12 text-center border border-slate-200">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-lg mb-4">
+              <Sparkles className="w-8 h-8 text-emerald-700" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              מוכן לניתוח
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              מערכת ניתוח מתקדמת
             </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              בחר את הגדרות הניתוח ולחץ על הכפתור כדי לקבל תובנות מתקדמות מבינה מלאכותית
+            <p className="text-slate-600 max-w-md mx-auto font-medium">
+              הגדר פרמטרי ניתוח והפעל את מנוע ה-AI לקבלת תובנות עסקיות מעמיקות
             </p>
           </div>
         )}

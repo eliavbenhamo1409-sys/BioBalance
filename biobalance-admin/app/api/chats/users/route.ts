@@ -31,9 +31,11 @@ export async function GET() {
     
     messages?.forEach((msg: any) => {
       if (!userMap.has(msg.user_id)) {
+        const userEmail = userEmailMap.get(msg.user_id);
         userMap.set(msg.user_id, {
           user_id: msg.user_id,
-          email: userEmailMap.get(msg.user_id) || 'לא ידוע',
+          // Show user_id if no email found (for debugging)
+          email: userEmail || `משתמש: ${msg.user_id.slice(0, 8)}...`,
           messageCount: 0,
           lastMessage: new Date(msg.created_at).toLocaleDateString('he-IL'),
         });
@@ -42,6 +44,11 @@ export async function GET() {
     });
 
     const chatUsers = Array.from(userMap.values());
+
+    // Debug logging
+    console.log('Chat users found:', chatUsers.length);
+    console.log('User IDs from messages:', userIds);
+    console.log('User profiles found:', users?.length || 0);
 
     return NextResponse.json({ users: chatUsers });
   } catch (error) {
